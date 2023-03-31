@@ -2,6 +2,8 @@ import { MetaTags, useMutation } from '@redwoodjs/web'
 import {toast, Toaster} from '@redwoodjs/web/toast'
 import { 
   FieldError,
+  FormError,
+  useForm,
   Form,
   Label,
   TextField,
@@ -29,12 +31,16 @@ interface FormValues {
   message: string;
 }
 const ContactPage = () => {
+  const formMethods = useForm({mode: 'onBlur'});
+
+
   const [create, { loading, error }] = useMutation<
     CreateContactMutation,
     CreateContactMutationVariables
   >(CREATE_CONTACT, {
     onCompleted: () => {
-      toast.success('thank you for your submission!')
+      toast.success('thank you for your submission!');
+      formMethods.reset()
     },
   })
 
@@ -48,7 +54,16 @@ const ContactPage = () => {
       <MetaTags title="Contact" description="Contact page" />
 
       <Toaster />
-      <Form onSubmit={onSubmit} config={{mode: 'onBlur'}}>
+      
+      {/* this setting on the form is invalidated once we manually call useForm from react; config={{mode: 'onBlur'}} */}
+      {/* error={error} ensures the box is hilighted with server-side errors that are validated in services */}
+      <Form
+        onSubmit={onSubmit}
+        error={error}
+        formMethods={formMethods} 
+      >   
+      {/* this creates the red list of errors, from server and user */}
+      <FormError error={error} wrapperClassName="form-error" />
         <Label name="name" errorClassName="error">Name</Label>
         <TextField
           name="name"
